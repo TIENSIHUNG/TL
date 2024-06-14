@@ -9,7 +9,6 @@ export default function SingleItemPage(props) {
 
 
 
-
     return (
         <div>
 

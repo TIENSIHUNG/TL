@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Image1 from './Images/ecom_img1.jpg';
 import Image2 from './Images/ecom_img2.jpg';
 import Image3 from './Images/ecom_img3.jpg';
-import Image4 from './Images/ecom_img4.jpg';
+
 
 function ImageSlider() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -10,8 +10,8 @@ function ImageSlider() {
   const images = [
     { src: Image1, alt: 'Image 1' },
     { src: Image2, alt: 'Image 2' },
-    { src: Image3, alt: 'Image 3' },
-    { src: Image4, alt: 'Image 4' },
+    { src: Image3, alt: 'Image 3' }
+
   ];
 
   useEffect(() => {

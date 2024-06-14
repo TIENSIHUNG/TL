@@ -23,6 +23,7 @@ import Address from "./components/Address.js";
 import Payment from "./components/Payment.js";
 import PaymentWrapper from "./components/PaymentWrapper.js";
 import ResetPassword from "./components/ResetPassword.js";
+import Dashboard from './components/Dashboard.js'
 
 
 function App() {
@@ -47,21 +48,23 @@ function App() {
         <Routes>
           {cookieValue == undefined && <Route path="/login" element={<Login />} />}
           {cookieValue == process.env.REACT_APP_ADMIN_MAIL && <Route path="/login" element={<AdminAccount />} />}
-          {(cookieValue != process.env.REACT_APP_ADMIN_MAIL && cookieValue != undefined) && <Route path="/login" element={<MyAccount />} />}
+          {cookieValue != undefined && cookieValue != process.env.REACT_APP_ADMIN_MAIL && (<Route path="/login" element={<MyAccount />} />)}
           <Route path="/" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/signup" element={<Signup />}/>
           <Route path="/orders" element={<Orders />} />
           <Route path="/singleorderpage" element={<SingleOrderPage />} />
           <Route path="/cart" element={<Cart />} />
           {/* <Route path="/allitempage?page=1" element={<AllItemPage />} /> */}
           <Route path="/searchpage" element={<SearchPage />} />
-          <Route path="/singleitempage" element={<SingleItemPage />} />
+          <Route path="/singleitempage/:productId" element={<SingleItemPage />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/forgotpassword" element={<ForgotPassword />} />
           <Route path="/resetpassword" element={<ResetPassword />} />
           <Route path="/address" element={<Address />} />
           <Route path="/payment" element={<Payment />} />
           <Route path="/paymentwrapper" element={<PaymentWrapper />} />
+          
 
 
           <Route path="*" element={<ErrorPage />} />

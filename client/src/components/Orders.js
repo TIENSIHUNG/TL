@@ -1,309 +1,165 @@
-import Cookies from 'js-cookie'
-import React, { useEffect, useState } from 'react'
-import LoadingBar from 'react-top-loading-bar'
-import axios from "axios"
+import Cookies from 'js-cookie';
+import React, { useEffect, useState } from 'react';
+import LoadingBar from 'react-top-loading-bar';
+import axios from 'axios';
 import { ToastContainer, toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux'
-import { bindActionCreators } from 'redux'
-import { actionCreators } from '../state/index.js'
-import PulseLoader from "react-spinners/PulseLoader";
-
+import { useDispatch } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import { actionCreators } from '../state/index.js';
+import PulseLoader from 'react-spinners/PulseLoader';
 
 export default function Orders() {
-  const [progress, setProgress] = useState(0)
-  const [data, setData] = useState([])
-  const cookieVal = Cookies.get("email")
-  const navigate = useNavigate()
-  const {  SingleOrderPageObj} = bindActionCreators(actionCreators, useDispatch())
-  const [loading, setLoading] = useState(true)
+  const [progress, setProgress] = useState(0);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+  const { SingleOrderPageObj } = bindActionCreators(actionCreators, useDispatch());
 
-
-  const getItemsFromOrderCollection = async (e) => {
-
-
-    setProgress(20)
-    // e.preventDefault();
-    const cookieVal = Cookies.get("email")
+  const getOrders = async () => {
+    setProgress(20);
+    const token = Cookies.get('token');
+    const userRole = Cookies.get('role'); // Assuming you store the role in a cookie
+    setIsAdmin(userRole === 'admin');
+    console.log("Token:", token); // Log the token for debugging
 
     try {
-      setProgress(50)
+      const res = await axios.get(`http://localhost:5000/api/${userRole === 'admin' ? 'admin' : 'user'}/get-order`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log("Response:", res.data); // Log the response for debugging
 
-      await axios.post(`${process.env.REACT_APP_SERVER_URL}/getItemsFromOrderCollection`, {
-        cookieVal
-      })
-        .then(res => {
-          if (res.data == "noitems") {
-            setLoading(false)
-            toast.warn("You donot have any orders")
-          }
-          else if (res.data == "fail") {
-            toast.error("Something went wrong");
-          }
-          else {
-            setLoading(false)
-            setData(res.data)
-          }
+      let fetchedOrders = res.data;
+      if (!Array.isArray(fetchedOrders)) {
+        fetchedOrders = [fetchedOrders]; // Wrap single order object in an array
+      }
 
-
-          setProgress(70)
-        })
-        .catch(e => {
-          toast.error("Somethig went wrong!");
-        })
+      if (fetchedOrders.length > 0) {
+        setOrders(fetchedOrders);
+        console.log("Orders set:", fetchedOrders); // Log orders for debugging
+      } else {
+        toast.warn("You don't have any orders");
+      }
+      setLoading(false);
+      setProgress(100);
+    } catch (error) {
+      console.error("Error fetching orders:", error); // Log the error for debugging
+      toast.error("Something went wrong!");
+      setProgress(100);
     }
+  };
 
+  const updateOrderStatus = async (orderId, newStatus) => {
+    setProgress(20);
+    const token = Cookies.get('token');
 
-    catch (e) {
-      toast.error("Somethig went wrong!");
+    try {
+      const res = await axios.put(`http://localhost:5000/api/admin/update-order/${orderId}`, {
+        orderStatus: newStatus
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log("Response:", res.data); // Log the response for debugging
 
-
+      // Update the order status locally
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === orderId ? { ...order, orderStatus: newStatus } : order
+        )
+      );
+      toast.success("Order status updated successfully");
+      setProgress(100);
+    } catch (error) {
+      console.error("Error updating order status:", error); // Log the error for debugging
+      toast.error("Failed to update order status");
+      setProgress(100);
     }
-    setProgress(100)
-
-  }
+  };
 
   useEffect(() => {
-    getItemsFromOrderCollection()
-  }, [])
+    getOrders();
+  }, []);
 
-  const [productName, setProductName] = useState('')
-  const [selectedOption, setSelectedOption] = useState(1)
-
-  const [reviewPopup, setReviewPopup] = useState(false)
-  const [ratingPopup, setRatingPopup] = useState(false)
-  const [review, setReview] = useState('')
-  const [rating, setRating] = useState('')
-
-  const submitReview = async (e) => {
-    if(review==''){
-      toast.error("Review cannot be empty")
-      return
-    }
-    setProgress(20)
-    // e.preventDefault();
-    const cookieVal = Cookies.get("email")
-
-    try {
-      setProgress(50)
-
-      await axios.post(`${process.env.REACT_APP_SERVER_URL}/submitReview`, {
-        cookieVal, review, productName
-      })
-        .then(res => {
-          if (res.data == "pass") {
-            toast.success("Review added")
-            getItemsFromOrderCollection()
-            setReviewPopup(false)
-          }
-
-          else {
-            toast.error("Something went wrong");
-          }
-
-
-          setProgress(70)
-        })
-        .catch(e => {
-          toast.error("Somethig went wrong!");
-        })
-    }
-
-
-    catch (e) {
-      toast.error("Somethig went wrong!");
-
-
-    }
-    setProgress(100)
-
-  }
-  const submitRating = async (e) => {
-    setProgress(20)
-    // e.preventDefault();
-    const cookieVal = Cookies.get("email")
-
-    try {
-      setProgress(50)
-
-      await axios.post(`${process.env.REACT_APP_SERVER_URL}/submitRating`, {
-        cookieVal, selectedOption, productName
-      })
-        .then(res => {
-          if (res.data == "pass") {
-            toast.success("Rating submitted")
-            getItemsFromOrderCollection()
-            setRatingPopup(false)
-
-          }
-
-          else {
-            toast.error("Something went wrong");
-          }
-
-
-          setProgress(70)
-        })
-        .catch(e => {
-          toast.error("Somethig went wrong!");
-        })
-    }
-
-
-    catch (e) {
-      toast.error("Somethig went wrong!");
-
-
-    }
-    setProgress(100)
-
-  }
-
-  const goToSingleOrderPage = (index) => {
-    SingleOrderPageObj({
-      name: data[index].SingleItemPageObj.name,
-      type: data[index].SingleItemPageObj.type,
-      img: data[index].SingleItemPageObj.img,
-      price: data[index].SingleItemPageObj.price,
-      date: data[index].date,
-      time: data[index].time,
-      qty: data[index].qty,
-      phoneNum: data[index].phoneNum,
-      address: data[index].address,
-      pincode: data[index].pincode,
-      cardNum: data[index].cardNum
-    })
-    navigate("/singleorderpage")
+  const goToSingleOrderPage = (order) => {
+    SingleOrderPageObj(order);
+    navigate("/singleorderpage");
   };
- 
 
   return (
-    loading==false?
-
     <div>
       <LoadingBar
         color='red'
         progress={progress}
         onLoaderFinished={() => setProgress(0)}
       />
+      <ToastContainer />
 
-      {reviewPopup && (
-        <div className=" z-20 fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white w-[90vw] sm:w-[70vw] lg:w-[50vw] rounded-lg p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Enter a Review</h2>
-              <i onClick={() => { setReviewPopup(false) }} class="cursor-pointer fa-regular fa-circle-xmark text-2xl"></i>
-            </div>
-            <div className="flex justify-center items-center">
-              <textarea onChange={(e) => { setReview(e.target.value) }} placeholder='Text' className="bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 w-full text-center text-lg font-semibold"></textarea>
-            </div>
-            <button onClick={submitReview} className="mt-3 cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg" >Submit</button>
-          </div>
+      {loading ? (
+        <div className='flex justify-center w-full my-10'>
+          <PulseLoader
+            color='rgb(74, 87, 224)'
+            loading={loading}
+            size={20}
+            aria-label='Loading Spinner'
+            data-testid='loader'
+          />
         </div>
-      )}
-      {ratingPopup && (
-        <div className=" z-20 fixed top-0 left-0 right-0 bottom-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white w-[90vw] sm:w-[70vw] lg:w-[50vw] rounded-lg p-6 shadow-xl">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Rate the product</h2>
-              <i onClick={() => { setRatingPopup(false) }} class="cursor-pointer fa-regular fa-circle-xmark text-2xl"></i>
-            </div>
-            <select value={selectedOption} onChange={(e) => { setSelectedOption(e.target.value) }} className="flex text-xl justify-center items-center border border-black rounded ">
-              <option>1</option>
-              <option>2</option>
-              <option>3</option>
-              <option>4</option>
-              <option>5</option>
-            </select>
-            <button onClick={submitRating} className="mt-3 cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg" >Submit</button>
-          </div>
-        </div>
-      )}
-
-
-
-
-      {
-        data.length > 0 ?
+      ) : (
+        orders.length > 0 ? (
           <div>
-            <h1 className='text-3xl font-bold mt-3 ml-3 text-center mb-10'>Your Orders</h1>
-
-            {data.map((e, index) => (
-              <div key={e.id} className=' my-3'>
-                <section className="text-gray-600 w-[95vw] my-3 flex   body-font overflow-hidden   mx-auto">
-                  <div className='w-3/12 lg:w-2/12 mr-3   grid place-items-center'>
-                    <img onClick={() => goToSingleOrderPage(index)}  alt="ecommerce" className="cursor-pointer items-center w-fit object-cover object-center rounded" src={e.SingleItemPageObj.img[0]} />
-                  </div>
-                  <div className=" w-8/12 flex-col flex">
-                    {/* <h2 className="text-xs lg:text-lg text-gray-500 tracking-widest">Type : {e.SingleItemPageObj.type}</h2> */}
-                    <h1 onClick={() => goToSingleOrderPage(index)} className="cursor-pointer w-fit text-gray-900 hover:text-indigo-500 text-lg lg:text-2xl title-font font-medium mb-1">{e.SingleItemPageObj.name}</h1>
-
-
-                    <p className='font-sans '>Ordered on {e.date} at {e.time}</p>
-                    {/* <p className='font-sans '>Qty : {e.qty}</p> */}
-
-                    <div className="lg:flex mt-auto ">
-                      {/* <span className="title-font font-medium text-xl lg:text-2xl text-gray-900">Total Payment was : ₹ {(e.qty) * (e.SingleItemPageObj.price)}.00</span> */}
-
-                      {e.SingleItemPageObj.reviews.length == 0 ?
-
-                        <p onClick={() => { setReviewPopup(true); setProductName(e.SingleItemPageObj.name) }} className='cursor-pointer my-3 lg:my-0 w-fit text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Add a Review</p>
-                        :
-
-                        e.SingleItemPageObj.reviews.find(obj => obj.name == cookieVal) ? <p className='my-3 lg:my-0  text-white bg-gray-500 border-0 py-2 px-6 w-fit focus:outline-none  rounded text-lg'>Review submitted</p>
-
-                          :
-                          <p onClick={() => { setReviewPopup(true); setProductName(e.SingleItemPageObj.name) }} className='my-3 lg:my-0   cursor-pointer text-white  bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Add a Review</p>
-
-                      }
-
-                      {e.SingleItemPageObj.allRatings.length == 0 ?
-
-                        <p onClick={() => { setRatingPopup(true); setProductName(e.SingleItemPageObj.name) }} className='w-fit ml-4  cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Rate the product</p>
-                        :
-
-                        e.SingleItemPageObj.allRatings.find(obj => obj.name == cookieVal) ? <p className='w-fit text-white ml-4 bg-gray-500 border-0 py-2 px-6 focus:outline-none  rounded text-lg'>Product rated</p>
-
-                          :
-                          <p onClick={() => { setRatingPopup(true); setProductName(e.SingleItemPageObj.name) }} className=' w-fit ml-4 cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Rate the product</p>
-
-                      }
-
-
-
-                      {/* <button onClick={() => { setRatingPopup(true) }} className='ml-4 cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Rate the product</button> */}
-
-                      {/* <button onClick={() => submitReview(index)} className='ml-auto  cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Add a Review</button>
-                      <button onClick={() => submitRating(index)} className='ml-4 cursor-pointer text-white bg-indigo-500 border-0 py-2 px-6 focus:outline-none hover:bg-indigo-600 rounded text-lg'>Rate the product</button> */}
+            <h1 className='text-3xl font-bold mt-3 ml-3 text-center mb-10'>{isAdmin ? 'All Orders' : 'Your Orders'}</h1>
+            {orders.map((order) => (
+              <div key={order._id} className='my-3'>
+                <section className="text-gray-600 w-[95vw] my-3 flex flex-col body-font overflow-hidden mx-auto">
+                  <div className="w-full flex-col flex">
+                    <h2 className="text-lg lg:text-2xl title-font font-medium mb-1">Order N.o: {order.title}</h2>
+                    <p className='font-sans mb-2'>Ordered on {new Date(order.createdAt).toLocaleDateString()}</p>
+                    <p className='font-sans mb-2'>Address: {order.address}</p>
+                    <p className='font-sans mb-2'>Phone: {order.phoneNumber}</p>
+                    <div className="mb-2">
+                      <h3 className='font-sans mb-1'>Products:</h3>
+                      <ul>
+                        {order.products.map((item) => (
+                          <li key={item.product._id} className='ml-4'>- {item.product.title} (Quantity: {item.count})</li>
+                        ))}
+                      </ul>
                     </div>
+                    <div className="mt-auto">
+                      <p className='w-fit text-white bg-gray-500 border-0 py-2 px-6 focus:outline-none rounded text-lg'>Total: {order.paymentIntent.amount} {order.paymentIntent.currency.toUpperCase()}</p>
+                    </div>
+                    {isAdmin && (
+                      <div className="mt-2">
+                        <select
+                          value={order.orderStatus}
+                          onChange={(e) => updateOrderStatus(order._id, e.target.value)}
+                        >
+                          <option value="Not Processed">Not Processed</option>
+                          <option value="Cash on Delivery">Cash on Delivery</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Dispatched">Dispatched</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </section>
-                <hr className=' border-gray-500 ' />
+                <hr className='border-gray-500' />
               </div>
-
-
             ))}
           </div>
-          :
-
+        ) : (
           <div className='w-full grid place-items-center lg:flex'>
             <h2 className='w-6/12 text-center lg:w-4/12 my-3 lg:my-0 lg:ml-4 font-bold text-xl lg:text-5xl'>No Orders Yet</h2>
-
-            <img className='w-6/12' src={require('./Images/noorders-freepik (1).jpg')} alt="" />
-
+            <img className='w-6/12' src={require('./Images/noorders-freepik (1).jpg')} alt="No Orders" />
           </div>
-      }
-
+        )
+      )}
     </div>
-    :
-    <div className='flex justify-center w-full my-10'>
-        <PulseLoader
-          color='rgb(74, 87, 224)'
-          loading={loading}
-          size={20}
-          aria-label="Loading Spinner"
-          data-testid="loader"
-        />
-      </div>
-  )
+  );
 }

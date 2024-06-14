@@ -138,7 +138,7 @@ export default function Navbar() {
               <button type='submit' className=' text-white bg-indigo-500  px-4 focus:outline-none hover:bg-indigo-600  cursor-pointer  border-gray-200  border-solid rounded-lg ml-0'><i className="fa-solid fa-magnifying-glass w-[20px]"></i></button>
 
               {micState ? <p className='text-white text-base font-medium ml-2'>Speak Now</p> :
-                <i onClick={handleStart} class=" text-white fa-solid fa-microphone  text-xl ml-3 cursor-pointer"></i>
+                <i onClick={handleStart} className=" text-white fa-solid fa-microphone  text-xl ml-3 cursor-pointer"></i>
               }
             </div>
           </form>

@@ -29,52 +29,28 @@ const initialState = {
     }
   };
 
-const reducer=(state=initialState,action)=>{
-    
+  const reducer = (state = initialState, action) => {
     switch (action.type) {
-
-        case 'searchQuery':
-            return  { ...state, searchQuery: action.payload }
-            
-            break;
-        case 'SingleItemPageObj':
-            return  { ...state, SingleItemPageObj: action.payload }
-            
-            break;
-        case 'SmallCartPreviewArr':
-            return  { ...state, SmallCartPreviewArr: action.payload }
-            
-            break;
-        case 'SmallCartPreviewTotal':
-            return  { ...state, SmallCartPreviewTotal: action.payload }
-            
-            break;
-        case 'isProductFromCart':
-            return  { ...state, isProductFromCart: action.payload }
-            
-            break;
-        case 'displayProductPage':
-            return  { ...state, text: action.payload }
-            
-            break;
-        case 'paymentDetails':
-            return  { ...state, paymentDetails: action.payload }
-            
-            break;
-        case 'SingleOrderPageObj':
-            return  { ...state, SingleOrderPageObj: action.payload }
-            
-            break;
-
-        
-    
-        default:
-            return state
-            break;
+      case 'searchQuery':
+        return { ...state, searchQuery: action.payload };
+      case 'SingleItemPageObj':
+        return { ...state, SingleItemPageObj: action.payload };
+      case 'SmallCartPreviewArr':
+        return { ...state, SmallCartPreviewArr: action.payload };
+      case 'SmallCartPreviewTotal':
+        return { ...state, SmallCartPreviewTotal: action.payload };
+      case 'isProductFromCart':
+        return { ...state, isProductFromCart: action.payload };
+      case 'displayProductPage':
+        return { ...state, text: action.payload };
+      case 'paymentDetails':
+        return { ...state, paymentDetails: action.payload };
+      case 'SingleOrderPageObj':
+        return { ...state, SingleOrderPageObj: action.payload };
+      default:
+        return state;
     }
+  };
   
-    
-}
-
-export default reducer
-
+  export default reducer;
+  

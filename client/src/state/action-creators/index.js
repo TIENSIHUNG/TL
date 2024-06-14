@@ -88,6 +88,23 @@ export const SingleOrderPageObj=(counter)=>{
     }
 }
 
+export const setSingleItem = (item) => {
+    return {
+      type: 'SET_SINGLE_ITEM',
+      payload: item,
+    };
+  };
 
-
+  // actionCreators.js
+// Action creators to add items to the cart and update total
+export const addToCart = (item) => ({
+    type: 'ADD_TO_CART',
+    payload: item,
+  });
+  
+  export const updateCartTotal = (total) => ({
+    type: 'UPDATE_CART_TOTAL',
+    payload: total,
+  });
+  
 
